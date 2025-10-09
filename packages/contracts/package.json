@@ -1,0 +1,29 @@
+{
+  "name": "@fhevm/contracts",
+  "version": "1.0.0",
+  "description": "Solidity smart contracts with FHE support",
+  "scripts": {
+    "compile": "hardhat compile",
+    "build": "npm run compile && npm run export-abi",
+    "export-abi": "node scripts/exportAbi.js",
+    "deploy": "hardhat run scripts/deploy.js",
+    "deploy:localhost": "hardhat run scripts/deploy.js --network localhost",
+    "test": "hardhat test",
+    "clean": "hardhat clean && rm -rf artifacts cache typechain-types abi"
+  },
+  "keywords": [
+    "fhevm",
+    "solidity",
+    "smart-contracts"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@types/node": "^20.10.0",
+    "hardhat": "^2.19.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  }
+}
