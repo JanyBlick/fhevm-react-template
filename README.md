@@ -13,7 +13,10 @@ This monorepo contains:
 
 ### Examples
 - **[@fhevm/example-nextjs](./examples/nextjs)** - Next.js template with voting dApp
-- **[@fhevm/example-renovation-budget](./examples/renovation-budget)** - Production Zama fhEVM app (Private Renovation Budget Manager)
+- **[@fhevm/example-renovation-budget](./examples/renovation-budget)** - 🚀 **Production Zama fhEVM app** 
+  - **[Live Demo](https://janyblick.github.io/RenovationBudget/)** 🌐
+  - **[GitHub Repo](https://github.com/JanyBlick/fhevm-react-template)** 
+  - See `demo.mp4` for walkthrough
 
 ## Quick Start
 
@@ -59,22 +62,29 @@ A complete educational example using our demo SDK:
 
 ```bash
 npm run dev:nextjs
+# → http://localhost:3000
 ```
 
 ### 2. Renovation Budget Manager (Production)
 **Location:** `examples/renovation-budget/`
 
 A **real production dApp** using Zama's fhEVM:
-- Real TFHE encryption (not mocks!)
-- Complex business logic with FHE
-- Zama Gateway integration
-- Deployed on Sepolia testnet
+- ✅ Real TFHE encryption (not mocks!)
+- ✅ Complex business logic with FHE
+- ✅ Zama Gateway integration
+- ✅ Deployed on Sepolia testnet
+- 🌐 **[Try Live Demo](https://janyblick.github.io/RenovationBudget/)**
+- 📹 Watch `demo.mp4` for walkthrough
+- 🔗 **[Source Code](https://github.com/JanyBlick/fhevm-react-template)**
 
 ```bash
 cd examples/renovation-budget
 npm install
 npm run dev  # Original vanilla JS frontend
+# → http://localhost:8080
 ```
+
+**Or try it live:** [https://janyblick.github.io/RenovationBudget/](https://janyblick.github.io/RenovationBudget/)
 
 See [Integration Guide](./examples/renovation-budget/INTEGRATION_GUIDE.md) for details.
 
@@ -89,6 +99,8 @@ fhevm-sdk-monorepo/
 └── examples/
     ├── nextjs/           # Next.js demo app
     └── renovation-budget/ # Production Zama fhEVM app
+        ├── demo.mp4      # Video walkthrough
+        └── ... (live on GitHub Pages)
 ```
 
 ## Features
@@ -106,6 +118,8 @@ fhevm-sdk-monorepo/
 - ✅ Gateway-based decryption
 - ✅ Production-grade contracts
 - ✅ Complex encrypted business logic
+- ✅ **Live demo available**
+- ✅ **Deployed on Sepolia**
 - ℹ️ Requires Zama-enabled network
 
 ## Documentation
@@ -114,6 +128,7 @@ fhevm-sdk-monorepo/
 - [Getting Started](./docs/GETTING_STARTED.md) - Tutorial for demo SDK
 - [API Reference](./docs/API.md) - Complete API documentation
 - [Architecture](./docs/ARCHITECTURE.md) - System design
+- [Comparison](./docs/COMPARISON.md) - Demo SDK vs Production fhEVM
 - [Contributing](./CONTRIBUTING.md) - Development guidelines
 - [Renovation Budget Integration](./examples/renovation-budget/INTEGRATION_GUIDE.md) - Production example guide
 
@@ -126,6 +141,7 @@ fhevm-sdk-monorepo/
 - Works anywhere
 - No special infrastructure
 - Great for development
+- Fast iteration
 
 ### Production Example (Renovation Budget)
 **Purpose:** Real-world reference
@@ -134,6 +150,7 @@ fhevm-sdk-monorepo/
 - Production patterns
 - Complex use cases  
 - Zama network required
+- **Live demo to try**
 
 ## Available Scripts
 
@@ -159,6 +176,22 @@ npm run clean               # Clean all build artifacts
 npm run test                # Run all tests
 ```
 
+## Live Demo
+
+🎯 **Try the production example now:**
+
+**[https://janyblick.github.io/RenovationBudget/](https://janyblick.github.io/RenovationBudget/)**
+
+See real FHE operations in action:
+- Connect MetaMask to Sepolia
+- Submit encrypted renovation budgets
+- Add encrypted room requirements
+- Submit contractor bids privately
+- Calculate encrypted totals
+- Request Gateway decryption
+
+Watch `examples/renovation-budget/demo.mp4` for a full walkthrough!
+
 ## License
 
 MIT - See [LICENSE](./LICENSE)
@@ -166,10 +199,15 @@ MIT - See [LICENSE](./LICENSE)
 ## Learn More
 
 - Start with the [Next.js example](./examples/nextjs) to learn SDK basics
-- Study the [Renovation Budget app](./examples/renovation-budget) for production patterns
+- **Try the [live demo](https://janyblick.github.io/RenovationBudget/)** to see production FHE
+- Watch `demo.mp4` for a video walkthrough
+- Study the [Renovation Budget code](https://github.com/JanyBlick/fhevm-react-template) for production patterns
 - Check [Zama fhEVM docs](https://docs.zama.ai/fhevm) for real FHE development
 - Review [API docs](./docs/API.md) for complete reference
+- Read [Comparison Guide](./docs/COMPARISON.md) to understand the differences
 
 ---
 
 **Built with ❤️ for privacy-preserving dApp development**
+
+**🌐 Live Demo:** [janyblick.github.io/RenovationBudget](https://janyblick.github.io/RenovationBudget/) | **📹 Video:** `examples/renovation-budget/demo.mp4`
