@@ -16,7 +16,7 @@ This monorepo contains:
 - **[@fhevm/example-renovation-budget](./examples/renovation-budget)** - 🚀 **Production Zama fhEVM app** 
   - **[Live Demo](https://janyblick.github.io/RenovationBudget/)** 🌐
   - **[GitHub Repo](https://github.com/JanyBlick/fhevm-react-template)** 
-  - See `demo.mp4` for walkthrough
+  - See `demo1.mp4 demo2.mp4 demo3.mp4` for walkthrough
 
 ## Quick Start
 
