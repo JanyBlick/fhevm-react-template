@@ -115,7 +115,7 @@ npm run dev
 ## Resources
 
 - **Live Demo**: [https://janyblick.github.io/RenovationBudget/](https://janyblick.github.io/RenovationBudget/)
-- **Demo Video**: `demo1.mp4 demo2.mp4 demo3.mp4` (this directory)
+- **Demo Video**: `demo.mp4 ` (this directory)
 - **Source Code**: [GitHub](https://github.com/JanyBlick/fhevm-react-template)
 - **Integration Guide**: [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)
 - **Zama Docs**: [docs.zama.ai/fhevm](https://docs.zama.ai/fhevm)
