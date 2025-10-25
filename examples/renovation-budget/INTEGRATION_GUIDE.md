@@ -2,14 +2,25 @@
 
 This document explains how the Private Renovation Budget dApp has been integrated into the FHEVM SDK monorepo.
 
+## Live Demo & Resources
+
+- **🌐 Live Demo**: [https://janyblick.github.io/RenovationBudget/](https://janyblick.github.io/RenovationBudget/)
+- **📹 Demo Video**: `demo.mp4` (9.4MB video walkthrough in this directory)
+- **🔗 GitHub Repository**: [https://github.com/JanyBlick/fhevm-react-template](https://github.com/JanyBlick/fhevm-react-template)
+- **📚 Original Template**: Based on fhevm-react-template
+
+> **Try it now!** Visit the live demo to see real FHE operations in action on Sepolia testnet.
+
 ## Overview
 
-The Private Renovation Budget Manager is a production dApp built with Zama's fhEVM that demonstrates real-world FHE usage. It has been integrated as an example showcasing:
+The Private Renovation Budget Manager is a **production dApp** built with Zama's fhEVM that demonstrates real-world FHE usage. It has been integrated as an example showcasing:
 
-- Real Zama fhEVM contracts (not mocks)
-- Production-grade FHE operations
-- Multiple encrypted data types (euint32, euint64, ebool)
-- Complex business logic with privacy preservation
+- ✅ Real Zama fhEVM contracts (not mocks)
+- ✅ Production-grade FHE operations
+- ✅ Multiple encrypted data types (euint32, euint64, ebool)
+- ✅ Complex business logic with privacy preservation
+- ✅ Live deployment on GitHub Pages
+- ✅ Real transactions on Sepolia testnet
 
 ## Original Structure
 
@@ -17,6 +28,18 @@ The original dApp uses:
 - **Contracts**: Zama fhEVM v0.8.0 with real FHE operations
 - **Frontend**: Vanilla HTML/JS with fhevmjs library
 - **Network**: Sepolia testnet with Zama Gateway
+- **Deployment**: GitHub Pages for frontend, Sepolia for contracts
+- **Repository**: [fhevm-react-template](https://github.com/JanyBlick/fhevm-react-template)
+
+## Watch the Demo
+
+The `demo.mp4` file in this directory shows:
+1. Connecting MetaMask to Sepolia
+2. Submitting encrypted renovation budgets
+3. Adding encrypted room requirements
+4. Contractors submitting private bids
+5. Encrypted budget calculations
+6. Viewing results through Gateway decryption
 
 ## Integration Approach
 
@@ -49,94 +72,7 @@ For learning purposes or to demonstrate the SDK, we can create a Next.js wrapper
 | Contracts | Simple examples | Production FHE operations |
 | Decryption | Simulated | Gateway-based with KMS |
 | Security | Educational | Production-grade |
-
-## Contract Features
-
-The `PrivateRenovationBudget.sol` contract demonstrates:
-
-### 1. Encrypted Data Types
-
-```solidity
-euint32 area;          // Encrypted room area
-euint32 materialCost;  // Encrypted costs
-euint64 totalBudget;   // Encrypted budget
-ebool isActive;        // Encrypted boolean
-```
-
-### 2. FHE Operations
-
-```solidity
-// Encrypted comparisons
-FHE.decrypt(condition)
-
-// Encrypted arithmetic
-euint64 total = encryptedSum(values);
-
-// Sealed bids (fully private)
-euint64 bidAmount;
-```
-
-### 3. Gateway Integration
-
-- KMS (Key Management Service) integration
-- Decryption requests with pausers
-- Re-randomization for sIND-CPAD security
-- Multiple KMS node responses
-
-## Using This Example
-
-### Current Setup (Vanilla JS)
-
-```bash
-cd examples/renovation-budget
-
-# Install dependencies
-npm install
-
-# Compile contracts
-npm run compile
-
-# Deploy to Sepolia (requires funded wallet)
-npm run deploy
-
-# Run frontend
-npm run dev
-```
-
-### Migrating to SDK Patterns
-
-If you want to use `@fhevm/react` hooks with real fhEVM:
-
-1. **Keep the contracts unchanged** (they're production-ready)
-2. **Install fhevmjs**:
-   ```bash
-   npm install fhevmjs
-   ```
-
-3. **Create wrapper hooks**:
-   ```typescript
-   import { useFhevm } from '@fhevm/react';
-   import { createInstance } from 'fhevmjs';
-
-   // Initialize fhevmjs instance
-   const fhevmInstance = await createInstance({
-     networkUrl: 'https://devnet.zama.ai',
-     gatewayUrl: 'https://gateway.zama.ai'
-   });
-
-   // Use with our SDK patterns
-   const { encrypt } = useEncrypt();
-   ```
-
-4. **Adapt encryption calls**:
-   ```typescript
-   // Original (fhevmjs)
-   const encrypted = instance.encrypt32(value);
-
-   // With SDK hooks
-   const { encrypt } = useEncrypt();
-   const encrypted = await encrypt(value, FheType.UINT32);
-   ```
+| Live Demo | Local only | [janyblick.github.io](https://janyblick.github.io/RenovationBudget/) |
 
 ## Project Structure
 
@@ -146,13 +82,16 @@ examples/renovation-budget/
 │   └── PrivateRenovationBudget.sol    # Production fhEVM contract
 ├── public/
 │   ├── app.js                          # Original frontend
-│   └── index.html
+│   ├── index.html
+│   └── deployment-config.js            # Contract addresses
 ├── scripts/
 │   └── deploy.js                       # Deployment script
 ├── test/
 │   └── PrivateRenovationBudget.test.ts
+├── demo.mp4                            # Video walkthrough
 ├── hardhat.config.js
-└── package.json
+├── README.md                           # Full project documentation
+└── INTEGRATION_GUIDE.md               # This file
 ```
 
 ## Learning from This Example
@@ -180,7 +119,18 @@ This example shows production implementation with Zama's stack.
 
 ## Deployment
 
-### Sepolia Testnet
+### Live Demo Setup
+
+The live demo at [janyblick.github.io/RenovationBudget](https://janyblick.github.io/RenovationBudget/) uses:
+
+1. **Frontend**: GitHub Pages hosting
+2. **Contracts**: Deployed on Sepolia testnet
+3. **Gateway**: Zama's production Gateway
+4. **Network**: Sepolia with Zama fhEVM support
+
+### Deploy Your Own
+
+#### Sepolia Testnet
 
 1. **Get Sepolia ETH**: From faucet
 2. **Configure `.env`**:
@@ -192,6 +142,30 @@ This example shows production implementation with Zama's stack.
    ```bash
    npm run deploy
    ```
+
+#### GitHub Pages
+
+1. **Build**:
+   ```bash
+   npm run compile
+   ```
+
+2. **Update `deployment-config.js`**:
+   ```javascript
+   const CONTRACT_ADDRESS = 'your_deployed_address';
+   ```
+
+3. **Push to GitHub**:
+   ```bash
+   git add public/
+   git commit -m "Deploy to GitHub Pages"
+   git push
+   ```
+
+4. **Enable GitHub Pages**:
+   - Repository Settings → Pages
+   - Source: Deploy from branch
+   - Branch: main, Folder: /public
 
 ### Integration with Monorepo
 
@@ -220,18 +194,24 @@ npm run dev
 - ✅ Real encryption
 - ✅ Complex business logic
 - ✅ Gateway integration
+- ✅ Live demo available
 - ❌ Requires Zama network
 - ❌ More complex setup
 
 ## Next Steps
 
-1. **Study the contracts** to understand real FHE
-2. **Run the original app** to see it in action
-3. **Optionally migrate** UI to Next.js for consistency
-4. **Compare patterns** between demo SDK and production code
+1. **Watch `demo.mp4`** to see the app in action
+2. **Visit the [live demo](https://janyblick.github.io/RenovationBudget/)** to try it yourself
+3. **Study the contracts** to understand real FHE
+4. **Clone the [GitHub repo](https://github.com/JanyBlick/fhevm-react-template)** for the original template
+5. **Run locally** to experiment with modifications
+6. **Compare patterns** between demo SDK and production code
 
 ## Resources
 
+- **Live Demo**: [https://janyblick.github.io/RenovationBudget/](https://janyblick.github.io/RenovationBudget/)
+- **Source Code**: [https://github.com/JanyBlick/fhevm-react-template](https://github.com/JanyBlick/fhevm-react-template)
+- **Demo Video**: `demo.mp4` in this directory
 - [Zama fhEVM Docs](https://docs.zama.ai/fhevm)
 - [fhevmjs Library](https://github.com/zama-ai/fhevmjs)
 - [Gateway Documentation](https://docs.zama.ai/fhevm/getting-started/gateway)
@@ -242,9 +222,13 @@ npm run dev
 When modifying this example:
 - Keep contracts compatible with Zama fhEVM
 - Test on Sepolia before mainnet
+- Update `deployment-config.js` with new addresses
 - Update documentation with changes
 - Follow original security patterns
+- Reference the [GitHub repository](https://github.com/JanyBlick/fhevm-react-template)
 
 ---
 
 **This example demonstrates production FHE usage and serves as a bridge between our educational SDK and real-world applications.**
+
+**🎥 Watch the demo video and try the live app to see it in action!**
