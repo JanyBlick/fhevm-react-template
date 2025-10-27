@@ -1,8 +1,5 @@
-// Private Renovation Budget Manager - Enhanced Version
-// Tech Stack: Vite + Vanilla JS + TypeScript + wagmi + RainbowKit + Tailwind CSS + Radix UI
-
-// Contract configuration
-const CONTRACT_ADDRESS = '0x301258156b7D06e69A2E116fc8EC574B78D2EA38';
+// Contract configuration - Set to null until contract is deployed
+const CONTRACT_ADDRESS = '0x55F046c86B21805df96997b479e9CF88ce8692C1';
 const SEPOLIA_CHAIN_ID = '0xaa36a7'; // Sepolia testnet chain ID
 const SEPOLIA_NETWORK = {
     chainId: SEPOLIA_CHAIN_ID,
@@ -18,7 +15,7 @@ const SEPOLIA_NETWORK = {
 
 const CONTRACT_ABI = [
     {
-        "inputs": [{"internalType": "address[]", "name": "_pauserAddresses", "type": "address[]"}, {"internalType": "uint256", "name": "_kmsGeneration", "type": "uint256"}],
+        "inputs": [],
         "stateMutability": "nonpayable",
         "type": "constructor"
     },
@@ -108,6 +105,19 @@ const CONTRACT_ABI = [
         "type": "function"
     },
     {
+        "inputs": [
+            {"internalType": "uint256", "name": "projectId", "type": "uint256"},
+            {"internalType": "address", "name": "contractor", "type": "address"}
+        ],
+        "name": "compareBidWithBudget",
+        "outputs": [
+            {"internalType": "euint64", "name": "bidAmount", "type": "uint256"},
+            {"internalType": "euint64", "name": "budgetEstimate", "type": "uint256"}
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "createProject",
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
@@ -176,6 +186,24 @@ const CONTRACT_ABI = [
     },
     {
         "inputs": [
+            {"internalType": "uint256", "name": "requestId", "type": "uint256"},
+            {"internalType": "uint64", "name": "decryptedBudget", "type": "uint64"},
+            {"internalType": "bytes[]", "name": "signatures", "type": "bytes[]"}
+        ],
+        "name": "processBudgetReveal",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [{"internalType": "uint256", "name": "projectId", "type": "uint256"}],
+        "name": "requestBudgetDecryption",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
             {"internalType": "uint256", "name": "projectId", "type": "uint256"},
             {"internalType": "uint64", "name": "bidAmount", "type": "uint64"},
             {"internalType": "uint32", "name": "timeEstimate", "type": "uint32"}
@@ -206,179 +234,13 @@ let provider;
 let signer;
 let contract;
 let userAddress;
-let transactionHistory = [];
-
-// Transaction history management
-const TX_STORAGE_KEY = 'renovation_tx_history';
-
-// Load transaction history from localStorage
-function loadTransactionHistory() {
-    try {
-        const stored = localStorage.getItem(TX_STORAGE_KEY);
-        if (stored) {
-            transactionHistory = JSON.parse(stored);
-        }
-    } catch (error) {
-        console.error('Error loading transaction history:', error);
-        transactionHistory = [];
-    }
-}
-
-// Save transaction history to localStorage
-function saveTransactionHistory() {
-    try {
-        localStorage.setItem(TX_STORAGE_KEY, JSON.stringify(transactionHistory));
-    } catch (error) {
-        console.error('Error saving transaction history:', error);
-    }
-}
-
-// Add transaction to history
-function addToHistory(type, description, txHash, status = 'pending') {
-    const transaction = {
-        id: Date.now(),
-        type,
-        description,
-        txHash,
-        status,
-        timestamp: new Date().toISOString(),
-        explorerUrl: `https://sepolia.etherscan.io/tx/${txHash}`
-    };
-
-    transactionHistory.unshift(transaction);
-
-    // Keep only last 50 transactions
-    if (transactionHistory.length > 50) {
-        transactionHistory = transactionHistory.slice(0, 50);
-    }
-
-    saveTransactionHistory();
-    updateTransactionHistoryUI();
-}
-
-// Update transaction status
-function updateTransactionStatus(txHash, status, error = null) {
-    const tx = transactionHistory.find(t => t.txHash === txHash);
-    if (tx) {
-        tx.status = status;
-        if (error) {
-            tx.error = error;
-        }
-        saveTransactionHistory();
-        updateTransactionHistoryUI();
-    }
-}
-
-// Display transaction history
-function updateTransactionHistoryUI() {
-    const historyContainer = document.getElementById('transaction-history');
-    if (!historyContainer) return;
-
-    if (transactionHistory.length === 0) {
-        historyContainer.innerHTML = '<p class="text-gray-500">No transactions yet</p>';
-        return;
-    }
-
-    const html = transactionHistory.map(tx => `
-        <div class="transaction-item ${tx.status}" data-tx-id="${tx.id}">
-            <div class="tx-header">
-                <span class="tx-type">${tx.type}</span>
-                <span class="tx-status ${tx.status}">${getStatusIcon(tx.status)} ${tx.status}</span>
-            </div>
-            <div class="tx-description">${tx.description}</div>
-            <div class="tx-footer">
-                <span class="tx-time">${formatTimeAgo(tx.timestamp)}</span>
-                <a href="${tx.explorerUrl}" target="_blank" rel="noopener noreferrer" class="tx-link">
-                    View on Explorer →
-                </a>
-            </div>
-            ${tx.error ? `<div class="tx-error">${tx.error}</div>` : ''}
-        </div>
-    `).join('');
-
-    historyContainer.innerHTML = html;
-}
-
-// Get status icon
-function getStatusIcon(status) {
-    switch(status) {
-        case 'pending': return '⏳';
-        case 'success': return '✅';
-        case 'failed': return '❌';
-        default: return '•';
-    }
-}
-
-// Format time ago
-function formatTimeAgo(timestamp) {
-    const now = new Date();
-    const time = new Date(timestamp);
-    const diff = now - time;
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) return `${days}d ago`;
-    if (hours > 0) return `${hours}h ago`;
-    if (minutes > 0) return `${minutes}m ago`;
-    return `${seconds}s ago`;
-}
-
-// Improved loading state - always close properly
-function showLoading(show, message = 'Processing transaction...') {
-    const loadingEl = document.getElementById('loading');
-    if (!loadingEl) return;
-
-    if (show) {
-        const p = loadingEl.querySelector('p');
-        if (p) p.textContent = message;
-        loadingEl.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    } else {
-        // Always close, no stack
-        loadingEl.style.display = 'none';
-        document.body.style.overflow = '';
-    }
-}
-
-// Enhanced error handling
-function handleError(error, context = '') {
-    console.error(`Error in ${context}:`, error);
-
-    let userMessage = 'An unexpected error occurred. Please try again.';
-
-    // Parse common error messages
-    if (error.message) {
-        if (error.message.includes('user rejected')) {
-            userMessage = 'Transaction cancelled by user.';
-        } else if (error.message.includes('insufficient funds')) {
-            userMessage = 'Insufficient funds to complete this transaction.';
-        } else if (error.message.includes('not authorized') || error.message.includes('Not authorized')) {
-            userMessage = 'You are not authorized to perform this action.';
-        } else if (error.message.includes('already')) {
-            userMessage = error.message;
-        } else if (error.message.includes('MetaMask')) {
-            userMessage = 'MetaMask error: ' + error.message;
-        } else if (error.reason) {
-            userMessage = error.reason;
-        } else {
-            userMessage = error.message;
-        }
-    }
-
-    showResult(userMessage, 'error');
-    return userMessage;
-}
 
 // Initialize the application
 async function init() {
     if (typeof window.ethereum !== 'undefined') {
         console.log('MetaMask detected');
-        loadTransactionHistory();
-        updateTransactionHistoryUI();
     } else {
-        showResult('Please install MetaMask to use this application. Visit https://metamask.io', 'error');
+        showResult('Please install MetaMask to use this application.', 'error');
     }
 }
 
@@ -390,7 +252,8 @@ async function addSepoliaNetwork() {
             params: [SEPOLIA_NETWORK]
         });
     } catch (error) {
-        throw new Error('Failed to add Sepolia network: ' + error.message);
+        console.error('Failed to add Sepolia network:', error);
+        throw error;
     }
 }
 
@@ -403,6 +266,7 @@ async function switchToSepolia() {
         });
     } catch (error) {
         if (error.code === 4902) {
+            // Network not added yet, add it
             await addSepoliaNetwork();
         } else {
             throw error;
@@ -412,65 +276,75 @@ async function switchToSepolia() {
 
 // Connect to MetaMask wallet
 async function connectWallet() {
-    console.log('Starting wallet connection...');
     try {
+        console.log('Starting wallet connection...');
+
         if (typeof window.ethereum === 'undefined') {
-            throw new Error('MetaMask not detected. Please install MetaMask extension from https://metamask.io');
+            throw new Error('MetaMask not detected. Please install MetaMask extension.');
         }
-        console.log('MetaMask detected');
 
-        showLoading(true, 'Connecting to wallet...');
+        console.log('MetaMask detected, requesting account access...');
+        showLoading(true);
 
-        console.log('Requesting account access...');
+        // Request account access
         await window.ethereum.request({ method: 'eth_requestAccounts' });
+        console.log('Account access granted');
 
-        console.log('Creating provider...');
+        // Create provider using ethers v6 syntax
+        console.log('Creating ethers provider...');
         provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         userAddress = await signer.getAddress();
-        console.log('Connected to address:', userAddress);
+        console.log('User address:', userAddress);
 
+        // Check and switch to Sepolia network
+        console.log('Checking network...');
         const network = await provider.getNetwork();
-        console.log('Current network:', network.chainId.toString());
+        console.log('Current network chainId:', network.chainId);
 
-        if (network.chainId !== 11155111n) {
-            console.log('Wrong network, switching to Sepolia...');
-            showLoading(true, 'Switching to Sepolia network...');
+        if (network.chainId !== 11155111n) { // Sepolia testnet (BigInt comparison)
+            console.log('Switching to Sepolia network...');
             await switchToSepolia();
+            // Recreate provider after network switch
             provider = new ethers.BrowserProvider(window.ethereum);
             signer = await provider.getSigner();
-            console.log('Switched to Sepolia');
+            console.log('Network switched successfully');
+        } else {
+            console.log('Already on Sepolia network');
         }
 
-        console.log('Initializing contract...');
+        // Create contract instance only if address is available
+        console.log('Setting up contract with address:', CONTRACT_ADDRESS);
         if (CONTRACT_ADDRESS && ethers.isAddress(CONTRACT_ADDRESS)) {
-            console.log('Contract address is valid:', CONTRACT_ADDRESS);
+            console.log('Creating contract instance...');
             contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
             document.getElementById('contract-address').textContent = CONTRACT_ADDRESS;
             document.getElementById('deployment-section').style.display = 'none';
+            // Check user role
+            console.log('Checking user role...');
             await checkUserRole();
         } else {
-            console.log('Contract not deployed');
+            console.log('Contract address not valid:', CONTRACT_ADDRESS);
             contract = null;
-            document.getElementById('contract-address').textContent = 'Contract not deployed';
+            document.getElementById('contract-address').textContent = 'Contract not deployed yet';
             document.getElementById('user-role').textContent = 'Please deploy contract first';
             document.getElementById('deployment-section').style.display = 'block';
         }
 
+        // Update UI
         document.getElementById('status-text').textContent = `Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
         document.getElementById('connect-btn').style.display = 'none';
         document.getElementById('app-content').style.display = 'block';
 
         if (CONTRACT_ADDRESS) {
-            showResult('✅ Connected to Sepolia successfully!', 'success');
-            console.log('Connection successful!');
+            showResult('Connected to Sepolia successfully! ✅', 'success');
         } else {
-            showResult('⚠️ Connected to Sepolia! Please deploy the contract.', 'warning');
+            showResult('Connected to Sepolia! Please deploy the contract and update CONTRACT_ADDRESS in app.js', 'warning');
         }
 
     } catch (error) {
         console.error('Connection error:', error);
-        handleError(error, 'connectWallet');
+        showResult(`Connection failed: ${error.message}`, 'error');
     } finally {
         showLoading(false);
     }
@@ -498,9 +372,11 @@ async function checkUserRole() {
 
 // Switch between tabs
 function switchTab(tabName) {
+    // Remove active class from all tabs
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
+    // Add active class to selected tab
     event.target.classList.add('active');
     document.getElementById(`${tabName}-tab`).classList.add('active');
 }
@@ -509,14 +385,13 @@ function switchTab(tabName) {
 async function createProject() {
     try {
         checkContractAvailable();
-        showLoading(true, 'Creating project...');
+
+        showLoading(true);
 
         const tx = await contract.createProject();
-        addToHistory('Create Project', 'Creating new renovation project', tx.hash, 'pending');
-
-        showLoading(true, 'Waiting for confirmation...');
         const receipt = await tx.wait();
 
+        // Get project ID from event logs (ethers v6)
         const event = receipt.logs.find(log => {
             try {
                 const parsedLog = contract.interface.parseLog(log);
@@ -529,18 +404,14 @@ async function createProject() {
         if (event) {
             const parsedEvent = contract.interface.parseLog(event);
             const projectId = parsedEvent.args.projectId.toString();
-            updateTransactionStatus(tx.hash, 'success');
-            showResult(`✅ Project created successfully! Project ID: ${projectId}`, 'success');
+            showResult(`Project created successfully! Project ID: ${projectId}`, 'success');
         } else {
-            updateTransactionStatus(tx.hash, 'success');
-            showResult('✅ Project created successfully!', 'success');
+            showResult('Project created successfully!', 'success');
         }
 
     } catch (error) {
-        const errorMsg = handleError(error, 'createProject');
-        if (transactionHistory[0]?.status === 'pending') {
-            updateTransactionStatus(transactionHistory[0].txHash, 'failed', errorMsg);
-        }
+        console.error('Error creating project:', error);
+        showResult(`Error creating project: ${error.message}`, 'error');
     } finally {
         showLoading(false);
     }
@@ -560,7 +431,7 @@ async function addRoom() {
             throw new Error('Please fill in all fields');
         }
 
-        showLoading(true, 'Adding room to project...');
+        showLoading(true);
 
         const tx = await contract.addRoomRequirement(
             projectId,
@@ -568,23 +439,18 @@ async function addRoom() {
             parseInt(materialCost),
             parseInt(laborCost)
         );
-
-        addToHistory('Add Room', `Adding room to project #${projectId}`, tx.hash, 'pending');
-        showLoading(true, 'Waiting for confirmation...');
         await tx.wait();
 
-        updateTransactionStatus(tx.hash, 'success');
-        showResult('✅ Room added successfully!', 'success');
+        showResult('Room added successfully!', 'success');
 
+        // Clear form
         document.getElementById('room-area').value = '';
         document.getElementById('material-cost').value = '';
         document.getElementById('labor-cost').value = '';
 
     } catch (error) {
-        const errorMsg = handleError(error, 'addRoom');
-        if (transactionHistory[0]?.status === 'pending') {
-            updateTransactionStatus(transactionHistory[0].txHash, 'failed', errorMsg);
-        }
+        console.error('Error adding room:', error);
+        showResult(`Error adding room: ${error.message}`, 'error');
     } finally {
         showLoading(false);
     }
@@ -606,22 +472,16 @@ async function calculateBudget() {
             throw new Error('Contingency percentage cannot exceed 50%');
         }
 
-        showLoading(true, 'Calculating budget...');
+        showLoading(true);
 
         const tx = await contract.calculateBudget(projectId, parseInt(contingency));
-        addToHistory('Calculate Budget', `Calculating budget for project #${projectId}`, tx.hash, 'pending');
-
-        showLoading(true, 'Waiting for confirmation...');
         await tx.wait();
 
-        updateTransactionStatus(tx.hash, 'success');
-        showResult('✅ Budget calculated successfully! Use "Get Budget Estimate" to view the encrypted results.', 'success');
+        showResult('Budget calculated successfully! Use "Get Budget Estimate" to view the encrypted results.', 'success');
 
     } catch (error) {
-        const errorMsg = handleError(error, 'calculateBudget');
-        if (transactionHistory[0]?.status === 'pending') {
-            updateTransactionStatus(transactionHistory[0].txHash, 'failed', errorMsg);
-        }
+        console.error('Error calculating budget:', error);
+        showResult(`Error calculating budget: ${error.message}`, 'error');
     } finally {
         showLoading(false);
     }
@@ -638,7 +498,7 @@ async function viewProject() {
             throw new Error('Please enter a project ID');
         }
 
-        showLoading(true, 'Loading project information...');
+        showLoading(true);
 
         const projectInfo = await contract.getProjectInfo(projectId);
 
@@ -646,8 +506,8 @@ async function viewProject() {
             <div class="result-item">
                 <h4>Project #${projectId} Information</h4>
                 <p><strong>Homeowner:</strong> ${projectInfo.homeowner}</p>
-                <p><strong>Is Calculated:</strong> ${projectInfo.isCalculated ? 'Yes ✅' : 'No ❌'}</p>
-                <p><strong>Is Approved:</strong> ${projectInfo.isApproved ? 'Yes ✅' : 'No ❌'}</p>
+                <p><strong>Is Calculated:</strong> ${projectInfo.isCalculated ? 'Yes' : 'No'}</p>
+                <p><strong>Is Approved:</strong> ${projectInfo.isApproved ? 'Yes' : 'No'}</p>
                 <p><strong>Room Count:</strong> ${projectInfo.roomCount}</p>
                 <p><strong>Bid Count:</strong> ${projectInfo.bidCount}</p>
                 <p><strong>Created:</strong> ${new Date(Number(projectInfo.timestamp) * 1000).toLocaleString()}</p>
@@ -657,7 +517,8 @@ async function viewProject() {
         showResult(result);
 
     } catch (error) {
-        handleError(error, 'viewProject');
+        console.error('Error viewing project:', error);
+        showResult(`Error viewing project: ${error.message}`, 'error');
     } finally {
         showLoading(false);
     }
@@ -674,7 +535,7 @@ async function getBudget() {
             throw new Error('Please enter a project ID');
         }
 
-        showLoading(true, 'Loading budget estimate...');
+        showLoading(true);
 
         const budget = await contract.getBudgetEstimate(projectId);
 
@@ -683,14 +544,15 @@ async function getBudget() {
                 <h4>Budget Estimate (Encrypted)</h4>
                 <p><strong>Total Budget Handle:</strong> ${budget.totalBudget.toString()}</p>
                 <p><strong>Final Estimate Handle:</strong> ${budget.finalEstimate.toString()}</p>
-                <p class="warning">⚠️ Note: These are encrypted values. Use FHE decryption to view actual amounts.</p>
+                <p class="warning">Note: These are encrypted values. Use FHE decryption to view actual amounts.</p>
             </div>
         `;
 
         showResult(result);
 
     } catch (error) {
-        handleError(error, 'getBudget');
+        console.error('Error getting budget:', error);
+        showResult(`Error getting budget: ${error.message}`, 'error');
     } finally {
         showLoading(false);
     }
@@ -707,7 +569,7 @@ async function getContractors() {
             throw new Error('Please enter a project ID');
         }
 
-        showLoading(true, 'Loading contractors...');
+        showLoading(true);
 
         const contractors = await contract.getProjectContractors(projectId);
 
@@ -727,7 +589,8 @@ async function getContractors() {
         showResult(result);
 
     } catch (error) {
-        handleError(error, 'getContractors');
+        console.error('Error getting contractors:', error);
+        showResult(`Error getting contractors: ${error.message}`, 'error');
     } finally {
         showLoading(false);
     }
@@ -749,22 +612,16 @@ async function approveProject() {
             throw new Error('Invalid contractor address');
         }
 
-        showLoading(true, 'Approving project...');
+        showLoading(true);
 
         const tx = await contract.approveProject(projectId, contractorAddress);
-        addToHistory('Approve Project', `Approving project #${projectId}`, tx.hash, 'pending');
-
-        showLoading(true, 'Waiting for confirmation...');
         await tx.wait();
 
-        updateTransactionStatus(tx.hash, 'success');
-        showResult(`✅ Project #${projectId} approved with contractor ${contractorAddress}!`, 'success');
+        showResult(`Project #${projectId} approved with contractor ${contractorAddress}!`, 'success');
 
     } catch (error) {
-        const errorMsg = handleError(error, 'approveProject');
-        if (transactionHistory[0]?.status === 'pending') {
-            updateTransactionStatus(transactionHistory[0].txHash, 'failed', errorMsg);
-        }
+        console.error('Error approving project:', error);
+        showResult(`Error approving project: ${error.message}`, 'error');
     } finally {
         showLoading(false);
     }
@@ -783,29 +640,24 @@ async function submitBid() {
             throw new Error('Please fill in all fields');
         }
 
-        showLoading(true, 'Submitting bid...');
+        showLoading(true);
 
         const tx = await contract.submitBid(
             projectId,
             parseInt(bidAmount),
             parseInt(timeEstimate)
         );
-
-        addToHistory('Submit Bid', `Submitting bid for project #${projectId}`, tx.hash, 'pending');
-        showLoading(true, 'Waiting for confirmation...');
         await tx.wait();
 
-        updateTransactionStatus(tx.hash, 'success');
-        showResult('✅ Bid submitted successfully!', 'success');
+        showResult('Bid submitted successfully!', 'success');
 
+        // Clear form
         document.getElementById('bid-amount').value = '';
         document.getElementById('time-estimate').value = '';
 
     } catch (error) {
-        const errorMsg = handleError(error, 'submitBid');
-        if (transactionHistory[0]?.status === 'pending') {
-            updateTransactionStatus(transactionHistory[0].txHash, 'failed', errorMsg);
-        }
+        console.error('Error submitting bid:', error);
+        showResult(`Error submitting bid: ${error.message}`, 'error');
     } finally {
         showLoading(false);
     }
@@ -822,7 +674,7 @@ async function viewMyBid() {
             throw new Error('Please enter a project ID');
         }
 
-        showLoading(true, 'Loading your bid...');
+        showLoading(true);
 
         const bid = await contract.getContractorBid(projectId, userAddress);
 
@@ -831,16 +683,17 @@ async function viewMyBid() {
                 <h4>My Bid for Project #${projectId}</h4>
                 <p><strong>Bid Amount Handle:</strong> ${bid.bidAmount.toString()}</p>
                 <p><strong>Time Estimate Handle:</strong> ${bid.timeEstimate.toString()}</p>
-                <p><strong>Is Submitted:</strong> ${bid.isSubmitted ? 'Yes ✅' : 'No ❌'}</p>
+                <p><strong>Is Submitted:</strong> ${bid.isSubmitted ? 'Yes' : 'No'}</p>
                 <p><strong>Submitted:</strong> ${Number(bid.timestamp) > 0 ? new Date(Number(bid.timestamp) * 1000).toLocaleString() : 'Not submitted'}</p>
-                <p class="warning">⚠️ Note: Bid amounts are encrypted. Use FHE decryption to view actual values.</p>
+                <p class="warning">Note: Bid amounts are encrypted. Use FHE decryption to view actual values.</p>
             </div>
         `;
 
         showResult(result);
 
     } catch (error) {
-        handleError(error, 'viewMyBid');
+        console.error('Error viewing bid:', error);
+        showResult(`Error viewing bid: ${error.message}`, 'error');
     } finally {
         showLoading(false);
     }
@@ -861,24 +714,19 @@ async function verifyContractor() {
             throw new Error('Invalid contractor address');
         }
 
-        showLoading(true, 'Verifying contractor...');
+        showLoading(true);
 
         const tx = await contract.verifyContractor(contractorAddress);
-        addToHistory('Verify Contractor', `Verifying contractor ${contractorAddress}`, tx.hash, 'pending');
-
-        showLoading(true, 'Waiting for confirmation...');
         await tx.wait();
 
-        updateTransactionStatus(tx.hash, 'success');
-        showResult(`✅ Contractor ${contractorAddress} verified successfully!`, 'success');
+        showResult(`Contractor ${contractorAddress} verified successfully!`, 'success');
 
+        // Clear form
         document.getElementById('contractor-address').value = '';
 
     } catch (error) {
-        const errorMsg = handleError(error, 'verifyContractor');
-        if (transactionHistory[0]?.status === 'pending') {
-            updateTransactionStatus(transactionHistory[0].txHash, 'failed', errorMsg);
-        }
+        console.error('Error verifying contractor:', error);
+        showResult(`Error verifying contractor: ${error.message}`, 'error');
     } finally {
         showLoading(false);
     }
@@ -891,6 +739,10 @@ function checkContractAvailable() {
     }
 }
 
+function showLoading(show) {
+    document.getElementById('loading').style.display = show ? 'flex' : 'none';
+}
+
 function showResult(message, type = 'info') {
     const resultsDiv = document.getElementById('results');
     const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : '';
@@ -901,6 +753,7 @@ function showResult(message, type = 'info') {
         resultsDiv.innerHTML = message;
     }
 
+    // Scroll to results
     resultsDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -908,14 +761,17 @@ function showResult(message, type = 'info') {
 if (typeof window.ethereum !== 'undefined') {
     window.ethereum.on('accountsChanged', (accounts) => {
         if (accounts.length === 0) {
-            
+            // User disconnected
+            location.reload();
         } else {
-            
+            // User switched accounts
+            location.reload();
         }
     });
 
     window.ethereum.on('chainChanged', (chainId) => {
-        
+        // User switched networks
+        location.reload();
     });
 }
 
