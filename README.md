@@ -51,14 +51,28 @@ cd examples/renovation-budget && npm run dev
 
 ## Examples Overview
 
-### 1. Next.js Voting Example (Educational)
+### 1. Next.js Comprehensive Example (Educational)
 **Location:** `examples/nextjs/`
 
-A complete educational example using our demo SDK:
-- Simple voting system
+A complete full-featured example using our demo SDK:
+- Private voting system
+- Encryption and decryption demos
+- Homomorphic computation examples
+- Key management interface
+- Banking use case (private transactions)
+- Medical use case (health data privacy)
+- Complete API routes implementation
 - `@fhevm/react` hooks integration
+- Custom React hooks and components
 - Mock FHE operations for learning
 - Works on any EVM network
+
+**Features:**
+- 6 interactive demo tabs
+- Comprehensive component library
+- API routes for server-side operations
+- Full TypeScript support
+- Modern UI with Tailwind CSS
 
 ```bash
 npm run dev:nextjs
@@ -96,11 +110,25 @@ fhevm-sdk-monorepo/
 │   ├── sdk/              # Core SDK (demo/educational)
 │   ├── react/            # React hooks & adapters
 │   └── contracts/        # Simple example contracts
-└── examples/
-    ├── nextjs/           # Next.js demo app
-    └── renovation-budget/ # Production Zama fhEVM app
-        ├── demo.mp4      # Video walkthrough
-        └── ... (live on GitHub Pages)
+├── templates/            # Starter templates
+│   └── README.md         # Template documentation
+├── examples/
+│   ├── nextjs/           # Next.js comprehensive demo
+│   │   ├── src/
+│   │   │   ├── app/      # Next.js App Router with API routes
+│   │   │   ├── components/ # UI and FHE components
+│   │   │   ├── lib/      # Utility libraries
+│   │   │   ├── hooks/    # Custom React hooks
+│   │   │   └── types/    # TypeScript definitions
+│   │   └── README.md     # Next.js example documentation
+│   └── renovation-budget/ # Production Zama fhEVM app
+│       ├── demo.mp4      # Video walkthrough
+│       └── ... (live on GitHub Pages)
+└── docs/                 # Comprehensive documentation
+    ├── API.md            # API reference
+    ├── ARCHITECTURE.md   # System architecture
+    ├── COMPARISON.md     # Demo vs Production comparison
+    └── GETTING_STARTED.md # Quick start guide
 ```
 
 ## Features
