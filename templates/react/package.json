@@ -1,0 +1,18 @@
+{
+  "name": "@fhevm/template-react",
+  "version": "1.0.0",
+  "description": "React template for FHEVM SDK - see ../../examples/renovation-budget for full implementation",
+  "private": true,
+  "scripts": {
+    "info": "echo 'This template is located at ../../examples/renovation-budget' && echo 'Run: cd ../../examples/renovation-budget && npm install && npm run dev'"
+  },
+  "keywords": [
+    "fhevm",
+    "react",
+    "nextjs",
+    "template",
+    "fhe",
+    "encryption"
+  ],
+  "license": "MIT"
+}

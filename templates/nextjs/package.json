@@ -1,0 +1,17 @@
+{
+  "name": "@fhevm/template-nextjs",
+  "version": "1.0.0",
+  "description": "Next.js template for FHEVM SDK - see ../../examples/nextjs for full implementation",
+  "private": true,
+  "scripts": {
+    "info": "echo 'This template is located at ../../examples/nextjs' && echo 'Run: cd ../../examples/nextjs && npm install && npm run dev'"
+  },
+  "keywords": [
+    "fhevm",
+    "nextjs",
+    "template",
+    "fhe",
+    "encryption"
+  ],
+  "license": "MIT"
+}
