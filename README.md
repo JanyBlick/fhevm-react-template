@@ -14,7 +14,7 @@ This repository contains a **complete FHEVM SDK implementation** with all requir
 - ✅ **Video Demonstrations** - Three walkthrough videos (demo1.mp4, demo2.mp4, demo3.mp4)
 - ✅ **Live Deployment** - [https://janyblick.github.io/RenovationBudget/](https://janyblick.github.io/RenovationBudget/)
 
-All files match the structure requirements from `next.md` and `bounty.md`.
+ demo1.mp4 demo2.mp4 demo3.mp4
 
 ## Architecture
 
